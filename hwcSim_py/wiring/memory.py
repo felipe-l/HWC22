@@ -24,7 +24,7 @@ class Memory(object):
         return self.writers
 
     def set_writers(self, writers):
-        self.writers = wrtiers
+        self.writers = writers
 
     def deliver_stored_val(self):
         # Needs to pass value stored in mem to its readers.

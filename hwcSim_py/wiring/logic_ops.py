@@ -421,3 +421,28 @@ class LE(LogicOp):
 
     def get_lambda():
         return
+    
+class assertOp(LogicOp):
+
+    def __init__(self, assertBit):
+
+        self.BIT = assertBit
+        self.val_a = None
+        self.out   = None
+
+    def deliver_a(self, val):
+        self.val_a = val
+        # try to evaluate operation
+        self.evaluate_op()
+
+    def evaluate_op(self):
+        if self.val_a == None:
+            return
+
+        if self.val_a != 1:
+            print("ASSERT FAILED AT BIT " + str(self.BIT))
+            assert False
+
+
+    def get_lambda():
+        return

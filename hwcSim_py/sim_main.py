@@ -269,6 +269,7 @@ def parse_args():
         if (sys.argv[arg_ptr] == "--wire"):
             global wire_filename
             wire_filename = sys.argv[arg_ptr + 1]
+            print(sys.argv[arg_ptr + 1])
             arg_ptr += 2
             continue
 
@@ -383,6 +384,11 @@ def parse_wire_file():
                 line = parse_constants(constant_count, file)
 
                 continue
+            
+            if line.startswith("assert count"):
+                assert_count = int(line.split()[2])
+                line = parse_assert(assert_count, file)
+
 
             line = file.readline()
 
@@ -442,6 +448,7 @@ def parse_memory(mem_count, file):
         line = file.readline()
     
     return line
+
 
 def parse_logic_ops(logic_count, file):
     line = file.readline()
@@ -646,6 +653,26 @@ def parse_constants(constantCount, file):
         line = file.readline()
         
     return line
+
+def parse_assert(assertCount, file):
+    line = file.readline()
+
+    for currAssert in range(assertCount):
+        currAssert = line.split()
+
+        assertBit = int(currAssert[1])
+        # size = int(logic_info[3])
+        # a    = int(logic_info[5])
+        # b    = int(logic_info[7])
+        # out  = int(logic_info[9])
+
+        # Build keys for dictionary
+        reader_a_key = (assertBit, 1)
+        
+        logic_obj = assertOp(assertBit)
+        
+        bit_dictionary.addReader(reader_a_key, lambda val: logic_obj.deliver_a(val))
+        line = file.readline()
 
 # Needed to lock values when using lambda
 def make_conn(writer_key):

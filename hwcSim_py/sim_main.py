@@ -37,8 +37,13 @@ def main():
     '''
     Arguments we will support currently:
     Usage: python sim_main.py (--reset) (--genTemplate) (--run <tick_amount>) (--input <file_name>)
+    
+    NOTE: The --wire and --input arguments are necessary for initial run.
+
 
     --run <tick_amount>: Sets the simulator to run for <tick_amount> of ticks
+
+    --wire <file_name>: Sets the wire_filename is the simulator will run
 
     --input <file_name>: Sets the input file for the simulator, file_name supports csv structure
 
@@ -484,85 +489,92 @@ def parse_logic_ops(logic_count, file):
 
         else:
             size = int(logic_info[3])
-            a    = int(logic_info[5])
-            b    = int(logic_info[7])
-            out  = int(logic_info[9])
 
-            # Build keys for dictionary
-            reader_a_key = (a  , size)
-            reader_b_key = (b  , size)
-            writer_key   = (out, size)
-
-            # Parse "to" bit
-            result = bit_dictionary.addWriter(writer_key)
-
-            if not result:
-                print("Short circuit detected @ " + line)
-                exit(1)
-
-            if logic_info[1] == "AND":
-                # Create AND Object for LogicOp
-                logic_obj = AND(bit_dictionary.get_readers(writer_key), 
-                            bit_dictionary.get_writers(writer_key), 
-                            "AND-" + str(writer_key))
-
-            elif logic_info[1] == "OR":
-                # Create AND Object for LogicOp
-                logic_obj = OR(bit_dictionary.get_readers(writer_key), 
-                            bit_dictionary.get_writers(writer_key), 
-                            "OR-" + str(writer_key))
-
-            elif logic_info[1] == "XOR":
-                # Create AND Object for LogicOp
-                logic_obj = XOR(bit_dictionary.get_readers(writer_key), 
-                            bit_dictionary.get_writers(writer_key), 
-                            "XOR-" + str(writer_key))
-
-            elif logic_info[1] == "EQ":
-                # Create EQ object for LogicOp
-                logic_obj = EQ(bit_dictionary.get_readers(writer_key), 
-                            bit_dictionary.get_writers(writer_key), 
-                            "EQ-" + str(writer_key))
-
-            elif logic_info[1] == "NEQ":
-                # Create NEQ object for LogicOp
-                logic_obj = NEQ(bit_dictionary.get_readers(writer_key), 
-                            bit_dictionary.get_writers(writer_key), 
-                            "NEQ-" + str(writer_key))
-
-            elif logic_info[1] == "GT":
-                # Create EQ object for LogicOp
-                logic_obj = GT(bit_dictionary.get_readers(writer_key), 
-                            bit_dictionary.get_writers(writer_key), 
-                            "GT-" + str(writer_key))
-
-            elif logic_info[1] == "GE":
-                # Create EQ object for LogicOp
-                logic_obj = GE(bit_dictionary.get_readers(writer_key), 
-                            bit_dictionary.get_writers(writer_key), 
-                            "GE-" + str(writer_key))
-
-            elif logic_info[1] == "LT":
-                # Create EQ object for LogicOp
-                logic_obj = LT(bit_dictionary.get_readers(writer_key), 
-                            bit_dictionary.get_writers(writer_key), 
-                            "LT-" + str(writer_key))
-
-            elif logic_info[1] == "LE":
-                # Create EQ object for LogicOp
-                logic_obj = LE(bit_dictionary.get_readers(writer_key), 
-                            bit_dictionary.get_writers(writer_key), 
-                            "LE-" + str(writer_key))
-
+            if size > 1:
+                a = logic_info[5].split(",")
+                b = logic_info[7].split(",")
+                out = logic_info[9].split(",")
             else:
-                print("ERROR: Logic object not yet supported")
-                exit(1)
+                a    = [int(logic_info[5])]
+                b    = [int(logic_info[7])]
+                out  = [int(logic_info[9])]
 
-            # Parse from side
-            bit_dictionary.addReader(reader_a_key, lambda val: logic_obj.deliver_a(val))
-            bit_dictionary.addReader(reader_b_key, lambda val: logic_obj.deliver_b(val))
+            for conn in range(size):
+                # Build keys for dictionary
+                reader_a_key = (int(a[conn])  , size)
+                reader_b_key = (int(b[conn])  , size)
+                writer_key   = (int(out[conn]) , size)
 
-            logic_ops[logic_obj.getName()] = logic_obj
+                # Parse "to" bit
+                result = bit_dictionary.addWriter(writer_key)
+
+                if not result:
+                    print("Short circuit detected @ " + line)
+                    exit(1)
+
+                if logic_info[1] == "AND":
+                    # Create AND Object for LogicOp
+                    logic_obj = AND(bit_dictionary.get_readers(writer_key), 
+                                bit_dictionary.get_writers(writer_key), 
+                                "AND-" + str(writer_key))
+
+                elif logic_info[1] == "OR":
+                    # Create AND Object for LogicOp
+                    logic_obj = OR(bit_dictionary.get_readers(writer_key), 
+                                bit_dictionary.get_writers(writer_key), 
+                                "OR-" + str(writer_key))
+
+                elif logic_info[1] == "XOR":
+                    # Create AND Object for LogicOp
+                    logic_obj = XOR(bit_dictionary.get_readers(writer_key), 
+                                bit_dictionary.get_writers(writer_key), 
+                                "XOR-" + str(writer_key))
+
+                elif logic_info[1] == "EQ":
+                    # Create EQ object for LogicOp
+                    logic_obj = EQ(bit_dictionary.get_readers(writer_key), 
+                                bit_dictionary.get_writers(writer_key), 
+                                "EQ-" + str(writer_key))
+
+                elif logic_info[1] == "NEQ":
+                    # Create NEQ object for LogicOp
+                    logic_obj = NEQ(bit_dictionary.get_readers(writer_key), 
+                                bit_dictionary.get_writers(writer_key), 
+                                "NEQ-" + str(writer_key))
+
+                elif logic_info[1] == "GT":
+                    # Create EQ object for LogicOp
+                    logic_obj = GT(bit_dictionary.get_readers(writer_key), 
+                                bit_dictionary.get_writers(writer_key), 
+                                "GT-" + str(writer_key))
+
+                elif logic_info[1] == "GE":
+                    # Create EQ object for LogicOp
+                    logic_obj = GE(bit_dictionary.get_readers(writer_key), 
+                                bit_dictionary.get_writers(writer_key), 
+                                "GE-" + str(writer_key))
+
+                elif logic_info[1] == "LT":
+                    # Create EQ object for LogicOp
+                    logic_obj = LT(bit_dictionary.get_readers(writer_key), 
+                                bit_dictionary.get_writers(writer_key), 
+                                "LT-" + str(writer_key))
+
+                elif logic_info[1] == "LE":
+                    # Create EQ object for LogicOp
+                    logic_obj = LE(bit_dictionary.get_readers(writer_key), 
+                                bit_dictionary.get_writers(writer_key), 
+                                "LE-" + str(writer_key))
+
+                else:
+                    print("ERROR: Logic object not yet supported")
+                    exit(1)
+
+                # Parse from side
+                bit_dictionary.addReader(reader_a_key, lambda val: logic_obj.deliver_a(val))
+                bit_dictionary.addReader(reader_b_key, lambda val: logic_obj.deliver_b(val))
+
+                logic_ops[logic_obj.getName()] = logic_obj
 
         line = file.readline()
 

@@ -28,6 +28,7 @@ bit_dictionary = Bit_Dictionary()
 outputs = []
 inputs  = []
 
+condConns = {}
 logic_ops = {}
 constants = {}
 memory    = {}
@@ -585,28 +586,56 @@ def parse_connections(connCount, file):
 
     for conn in range(connCount):
         connInfo = line.split()
-        
-        size    = int(connInfo[2])
-        toBit   = int(connInfo[4])
-        fromBit = int(connInfo[6])
-
-        reader_key = (fromBit, size)
-        writer_key = (toBit  , size)
-
-        # Parse "to" side
         global result 
-        result = bit_dictionary.addWriter(writer_key)
 
-        if not result:
-            print("Short circuit detected @ " + line)
-            exit(1)
+        if connInfo[0] == "connection":
+            size    = int(connInfo[2])
+            toBit   = int(connInfo[4])
+            fromBit = int(connInfo[6])
 
-        # Parse "from" side
-        bit_dictionary.addReader(reader_key, make_conn(writer_key))
+            reader_key = (fromBit, size)
+            writer_key = (toBit  , size)
 
-        line = file.readline()
+            # Parse "to" side
+            result = bit_dictionary.addWriter(writer_key)
+
+            if not result:
+                print("Short circuit detected @ " + line)
+                exit(1)
+
+            # Parse "from" side
+            bit_dictionary.addReader(reader_key, make_conn(writer_key))
+
+            line = file.readline()
+        elif connInfo[0] == "cond":
+            size    = int(connInfo[2])
+            toBit   = int(connInfo[4])
+            fromBit = int(connInfo[6])
+            condition = int(connInfo[8])
+
+            reader_key = (fromBit, size)
+            writer_key = (toBit  , size)
+            condition_key = (condition, size)
+
+            # Parse "to" side
+            result = bit_dictionary.addWriter(writer_key)
+
+            if not result:
+                print("Short circuit detected @ " + line)
+                exit(1)
+
+            # Parse "from" side
+            if reader_key not in condConns:
+                condConns[reader_key] = condConnOp(bit_dictionary)
+            condConns[reader_key].addConn(condition, writer_key)
+            bit_dictionary.addReader(reader_key, lambda val: condConns[reader_key].setVal(condition, val))
+            bit_dictionary.addReader(condition_key, lambda val: condConns[reader_key].setCondition(condition, val))
+
+            line = file.readline()
+
     
     return line
+    
 
 def parse_io(ioCount, file):
     line = file.readline()

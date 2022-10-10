@@ -56,6 +56,7 @@ class BD_Value():
     def __init__(self):
         self.readers = []
         self.writers = False
+        self.cond = []
 
     def addReader(self, value):
         self.readers.append(value)
@@ -66,6 +67,9 @@ class BD_Value():
 
         self.writers = True
         return True
+
+    #def addCondWriter(self):
+    #    pass
 
     def get_readers(self):
         return self.readers

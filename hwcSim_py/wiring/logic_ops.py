@@ -17,6 +17,8 @@ case OP_NEQUAL:
 		case OP_CONCAT:
 '''
 
+from wiring.bit_dictionary import Bit_Dictionary
+
 class LogicOp(object):
 
     def __init__(self, readers, writers, name):
@@ -443,6 +445,40 @@ class assertOp(LogicOp):
             print("ASSERT FAILED AT BIT " + str(self.BIT))
             assert False
 
+    def get_lambda():
+        return
+
+class condConnOp(LogicOp):
+
+    def __init__(self, bit_dictionary):
+
+        self.bit_dictionary = bit_dictionary
+        self.producedOutput = False
+        self.condLambdas = {}
+
+    def evaluate_op(self, condition):
+        if self.condLambdas[condition][1] == False or self.condLambdas[condition][2] == False:
+            return
+
+        if self.producedOutput:
+            print("Conditional connection has made a short circuit.")
+            assert False
+        else:
+            self.producedOutput = True
+            #self.condLambdas[condition](self.condLambdas[condition][1])
+            self.condLambdas[condition][0](self.condLambdas[condition][1])
+    
+    #Three items in the list. First item is lambda to be called, second is val, third is if condition was met.
+    def addConn(self, condition, writer_key):
+        self.condLambdas[condition] =  [lambda val: [reader(val) for reader in self.bit_dictionary.get_readers(writer_key)], False, False]
+
+    def setVal(self, condition, val):
+        self.condLambdas[condition][1] = val
+        self.evaluate_op(condition)
+    
+    def setCondition(self, condition, val):
+        self.condLambdas[condition][2] = val
+        self.evaluate_op(condition)
 
     def get_lambda():
         return

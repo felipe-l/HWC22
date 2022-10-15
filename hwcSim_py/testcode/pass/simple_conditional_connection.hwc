@@ -1,0 +1,10 @@
+part main {
+    public bit a;
+    public bit b;
+    public bit c;
+    public bit d;
+
+    if (c != 1){
+        d = a & b;
+    }
+}

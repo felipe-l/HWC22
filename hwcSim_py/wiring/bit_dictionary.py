@@ -67,6 +67,9 @@ class BD_Value():
         self.writers = True
         return True
 
+    #def addCondWriter(self):
+    #    pass
+
     def get_readers(self):
         return self.readers
 

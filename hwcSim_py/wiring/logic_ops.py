@@ -450,9 +450,8 @@ class assertOp(LogicOp):
 
 class condConnOp(LogicOp):
 
-    def __init__(self, bit_dictionary):
+    def __init__(self):
 
-        self.bit_dictionary = bit_dictionary
         self.producedOutput = False
         self.condLambdas = {}
 
@@ -464,21 +463,43 @@ class condConnOp(LogicOp):
             print("Conditional connection has made a short circuit.")
             assert False
         else:
+            #Setting flag to true, to flag that output has been provided from this connection.
             self.producedOutput = True
-            #self.condLambdas[condition](self.condLambdas[condition][1])
-            self.condLambdas[condition][0](self.condLambdas[condition][1])
-    
-    #Three items in the list. First item is lambda to be called, second is val, third is if condition was met.
-    def addConn(self, condition, writer_key):
-        self.condLambdas[condition] =  [lambda val: [reader(val) for reader in self.bit_dictionary.get_readers(writer_key)], False, False]
 
+            # We create a connection object and immediately deliver.
+            completeConn = connOp(self.condLambdas[condition][0])
+            completeConn.deliver(self.condLambdas[condition][1])
+    
+    # Three items in the list. First item is lambda to be called, second is val, third is if condition was met.
+    # Create a conditional connection to the same location, we use the condition as a identifier.
+    def addConn(self, condition, readers):
+        self.condLambdas[condition] =  [readers, False, False]
+
+    # Deliver value bit
     def setVal(self, condition, val):
         self.condLambdas[condition][1] = val
         self.evaluate_op(condition)
     
+    # Deliver condition bit
     def setCondition(self, condition, val):
         self.condLambdas[condition][2] = val
         self.evaluate_op(condition)
+
+    def get_lambda():
+        return
+
+class connOp(LogicOp):
+
+    def __init__(self, readers):
+        
+        # Reference of readers from bit dictionary.
+        self.readers = readers
+        self.condLambdas = {}
+
+    def deliver(self, val):
+        # Run all the readers from the reference obtained on compile time from bit dictionary.
+        for reader in self.readers:
+            reader(val)
 
     def get_lambda():
         return

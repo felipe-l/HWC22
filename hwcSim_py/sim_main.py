@@ -603,8 +603,10 @@ def parse_connections(connCount, file):
                 print("Short circuit detected @ " + line)
                 exit(1)
 
-            # Parse "from" side
-            bit_dictionary.addReader(reader_key, make_conn(writer_key))
+            connection = connOp(bit_dictionary.get_readers(writer_key))
+            # We create a connection object which stores the array where the readers are.
+            # The deliver method calls all the readers in the array.
+            bit_dictionary.addReader(reader_key, lambda val: connection.deliver(val))
 
             line = file.readline()
         elif connInfo[0] == "cond":
@@ -626,10 +628,14 @@ def parse_connections(connCount, file):
 
             # Parse "from" side
             if reader_key not in condConns:
-                condConns[reader_key] = condConnOp(bit_dictionary)
-            condConns[reader_key].addConn(condition, writer_key)
+                condConns[reader_key] = condConnOp()
+            # Multiple conditional connections can go to the same place. One object can represent multiple conditional connections.
+            # We distinguish these different connections going to the same location by the condition.
+            condConns[reader_key].addConn(condition, bit_dictionary.get_readers(writer_key))
             bit_dictionary.addReader(reader_key, lambda val: condConns[reader_key].setVal(condition, val))
             bit_dictionary.addReader(condition_key, lambda val: condConns[reader_key].setCondition(condition, val))
+            
+            
 
             line = file.readline()
 

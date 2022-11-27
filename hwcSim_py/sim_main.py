@@ -30,6 +30,7 @@ outputs = []
 inputs  = []
 
 connections = []
+condConnections = set()
 graphGuide = {}
 graphKey = {}
 condConns = {}
@@ -160,6 +161,16 @@ def main():
                     for reader in readers:
                         reader(user_inputs.get(usr_input))
 
+
+
+
+
+                ############################GRAPHVIZ##########################
+                print("START ", bitValue )
+                for condConn in condConns:
+                    if condConns[condConn].fromBit not in bitValue:
+                        bitValue[condConns[condConn].fromBit] = 0
+
                 outputValue = bitValue.copy()
                 print("HERE ", outputValue)
                 logicalOpIds = []
@@ -175,17 +186,31 @@ def main():
                     logicalOpIds.append(id(graphComp))
                 
                 for graphConn in connections:
-                    labelDict[graphConn.fromBit] = {"to":graphConn.toBit, "val":bitValue[graphConn.fromBit]}
+                    labelDict[graphConn.fromBit] = {"to":graphConn.toBit, "val":bitValue[graphConn.fromBit], "type": "connection"}
                     if graphConn.toBit in graphGuide:
-                        graphKey[graphConn.fromBit] = {"to":graphGuide[graphConn.toBit], "val":bitValue[graphConn.fromBit]}
+                        graphKey[graphConn.fromBit] = {"to":graphGuide[graphConn.toBit], "val":bitValue[graphConn.fromBit], "type": "connection"}
                     else:
                         if graphConn.fromBit in graphGuide:
-                            graphKey[graphGuide[graphConn.fromBit]] = {"to":graphConn.toBit, "val":bitValue[graphConn.fromBit]}
+                            graphKey[graphGuide[graphConn.fromBit]] = {"to":graphConn.toBit, "val":bitValue[graphConn.fromBit], "type": "connection"}
                             # Adds the logical operator id to bitValue dict to define edge color later.
                             bitValue[graphGuide[graphConn.fromBit]] = bitValue[graphConn.fromBit]
                         else:
-                            graphKey[graphConn.fromBit] = {"to":graphConn.toBit, "val":bitValue[graphConn.fromBit]}
+                            graphKey[graphConn.fromBit] = {"to":graphConn.toBit, "val":bitValue[graphConn.fromBit], "type": "connection"}
                     del outputValue[graphConn.fromBit]
+
+                for key, graphCondConn in condConns.items():
+                    labelDict[graphCondConn.fromBit] = {"to":graphCondConn.toBit, "val":bitValue[graphCondConn.fromBit], "type": "cond", "condition": graphCondConn.conditionBit}
+                    if graphCondConn.toBit in graphGuide:
+                        graphKey[graphCondConn.fromBit] = {"to":graphGuide[graphCondConn.toBit], "val":bitValue[graphCondConn.fromBit], "type": "cond", "condition": graphCondConn.conditionBit}
+                    else:
+                        if graphCondConn.fromBit in graphGuide:
+                            graphKey[graphGuide[graphCondConn.fromBit]] = {"to":graphCondConn.toBit, "val":bitValue[graphCondConn.fromBit], "type": "cond", "condition": graphCondConn.conditionBit}
+                            # Adds the logical operator id to bitValue dict to define edge color later.
+                            bitValue[graphGuide[graphCondConn.fromBit]] = bitValue[graphCondConn.fromBit]
+                        else:
+                            graphKey[graphCondConn.fromBit] = {"to":graphCondConn.toBit, "val":bitValue[graphCondConn.fromBit], "type": "cond", "condition": graphCondConn.conditionBit}
+                    del outputValue[graphCondConn.fromBit]
+
 
                 # Start writing file from dicts we just generated
                 try:
@@ -199,25 +224,38 @@ def main():
                 print("Graph KEy:", graphKey)
 
                 for outputBit, outputVal in outputValue.items():
-                    graphFile.write(str(outputBit) + ' [label="' + str(outputVal) + "(" + str(outputBit) + " -> output )" + '"shape=diamond];\n')
+                    graphFile.write(str(outputBit) + ' [label="(' + str(outputBit) + " -> output )" + '"shape=diamond];\n')
 
                 for currLogicOp in logic_ops.values():
-                    graphFile.write(str(id(currLogicOp)) + ' [label="' + str(currLogicOp.fromBits) + ' -> ' + str(currLogicOp.toBit) + '"];\n')
+                    graphFile.write(str(id(currLogicOp)) + ' [label="' + currLogicOp.stringType() + " " + str(currLogicOp.fromBits) + ' -> ' + str(currLogicOp.toBit) + '"];\n')
                 
 
                 for fromNode, toNode in graphKey.items():
                     color = "black"
-
                     # Logical operators are declared before, so we should not redeclare any logicalops
                     if fromNode not in logicalOpIds:
-                        graphFile.write(str(fromNode) + ' [label="' + str(bitValue[fromNode]) + "(" + str(fromNode) + " -> " + str(labelDict[fromNode]["to"]) + " )" + '"shape=diamond];\n')
+                        graphFile.write(str(fromNode) + ' [label="(' + str(fromNode) + " -> " + str(labelDict[fromNode]["to"]) + " )" + '"shape=diamond];\n')
                     if bitValue[fromNode] == 1:
                         color = "green"
                     else:
                         color = "red"
                     del bitValue[fromNode]
-                            
-                    graphFile.write(str(fromNode) + " -> " + str(toNode["to"]) + '[color="'+ color +'"];\n')
+                    if toNode["type"] == "connection":
+                        graphFile.write(str(fromNode) + " -> " + str(toNode["to"]) + '[color="'+ color +'"];\n')
+                    else:
+                        graphFile.write("joint"+str(fromNode) + " [shape=point];\n")
+                        #graphFile.write(str(fromNode) + " -> " + "joint"+str(fromNode) + '[headport=n arrowhead=none color="'+ color +'"];\n')
+                        if bitValue[toNode["condition"]] == 1:
+                            graphFile.write(str(fromNode) + " -> " + "joint"+str(fromNode) + '[headport=n arrowhead=none color="'+ color +'"];\n')
+                            graphFile.write("joint"+str(fromNode) + " -> " + str(toNode["to"]) + '[color="'+ color +'"];\n')
+                        else:
+                            graphFile.write("joint"+str(fromNode) + " -> " + str(toNode["to"]) + '[style=dotted color="'+ color +'"];\n')
+                            graphFile.write(str(fromNode) + " -> " + "joint"+str(fromNode) + '[style=dotted headport=n arrowhead=none color="'+ color +'"];\n')
+
+                        conditionColor = "green"
+                        if bitValue[toNode["condition"]] == 0:
+                            conditionColor = "red"
+                        graphFile.write(str(toNode["condition"]) + " -> " + "joint"+str(fromNode) + '[headport=e color="'+ conditionColor +'"];\n')
                 graphFile.write("}\n")
                 graphFile.close()
 
@@ -704,9 +742,10 @@ def parse_connections(connCount, file):
                 condConns[reader_key] = condConnOp(toBit, fromBit, bitValue, connections)
             # Multiple conditional connections can go to the same place. One object can represent multiple conditional connections.
             # We distinguish these different connections going to the same location by the condition.
+            
             condConns[reader_key].addConn(condition, bit_dictionary.get_readers(writer_key))
-            bit_dictionary.addReader(reader_key, lambda val: condConns[reader_key].setVal(condition, val))
-            bit_dictionary.addReader(condition_key, lambda val: condConns[reader_key].setCondition(condition, val))
+            bit_dictionary.addReader(reader_key, lambda val: condConns[reader_key].setVal(condition, val, bitValue))
+            bit_dictionary.addReader(condition_key, lambda val: condConns[reader_key].setCondition(condition, val, bitValue))
             
             
 

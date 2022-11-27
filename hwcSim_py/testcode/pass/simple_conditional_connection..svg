@@ -1,9 +1,14 @@
 digraph G {
-2 [label="1(2 -> output )"shape=diamond];
-4502522128 [label="[3, 4] -> 5"];
-0 [label="1(0 -> 3 )"shape=diamond];
-0 -> 4502522128[color="green"];
-1 [label="1(1 -> 4 )"shape=diamond];
-1 -> 4502522128[color="green"];
-4502522128 -> 2[color="green"];
+2 [label="(2 -> output )"shape=diamond];
+4549907504 [label="AND [3, 4] -> 5"];
+0 [label="(0 -> 3 )"shape=diamond];
+0 -> 4549907504[color="green"];
+1 [label="(1 -> 4 )"shape=diamond];
+1 -> 4549907504[color="red"];
+4549907504 -> 2[color="red"];
+6 [label="(6 -> 7 )"shape=diamond];
+joint6 [shape=point];
+joint6 -> 7[style=dotted color="green"];
+6 -> joint6[style=dotted headport=n arrowhead=none color="green"];
+2 -> joint6[headport=e color="red"];
 }

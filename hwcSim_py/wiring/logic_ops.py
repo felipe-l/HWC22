@@ -118,7 +118,7 @@ class AND(LogicOp):
         for reader in self.readers:
             reader(self.out)
 
-    def stringType():
+    def stringType(self):
         return "AND"
 
     def get_lambda():
@@ -478,9 +478,11 @@ class condConnOp(LogicOp):
         self.toBit = toBit
         self.fromBit = fromBit
         self.bitValue = bitValue
+        self.conditionBit = None
         self.connections = connections
+        self.madeConnection = None
 
-    def evaluate_op(self, condition):
+    def evaluate_op(self, condition, bitValue):
         if self.condLambdas[condition][1] == False or self.condLambdas[condition][2] == False:
             return
 
@@ -490,26 +492,29 @@ class condConnOp(LogicOp):
         else:
             #Setting flag to true, to flag that output has been provided from this connection.
             self.producedOutput = True
-
+            bitValue[self.toBit] = condition[1]
             # We create a connection object and immediately deliver.
             completeConn = connOp(self.condLambdas[condition][0], self.toBit, self.fromBit)
-            self.connections.append(completeConn)
+            # self.connections.append(completeConn)
+            self.madeConnection = completeConn
             completeConn.deliver(self.condLambdas[condition][1], self.bitValue)
     
     # Three items in the list. First item is lambda to be called, second is val, third is if condition was met.
     # Create a conditional connection to the same location, we use the condition as a identifier.
     def addConn(self, condition, readers):
+        self.conditionBit = condition
         self.condLambdas[condition] =  [readers, False, False]
 
     # Deliver value bit
-    def setVal(self, condition, val):
+    def setVal(self, condition, val, bitValue):
         self.condLambdas[condition][1] = val
-        self.evaluate_op(condition)
+        bitValue[self.fromBit] = val
+        self.evaluate_op(condition, bitValue)
     
     # Deliver condition bit
-    def setCondition(self, condition, val):
+    def setCondition(self, condition, val, bitValue):
         self.condLambdas[condition][2] = val
-        self.evaluate_op(condition)
+        self.evaluate_op(condition, bitValue)
 
     def get_lambda():
         return

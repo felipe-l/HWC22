@@ -1,0 +1,28 @@
+digraph G {
+2 [label="0"shape=diamond];
+4348928848 [label="AND-(5, 1)"];
+0 [label="1"shape=diamond];
+0 -> 4348928848[color="green"];
+1 [label="0"shape=diamond];
+1 -> 4348928848[color="red"];
+4348928848 -> 2[color="black"];
+}
+digraph G {
+2 [label="0"shape=diamond];
+4544070480 [label="AND-(5, 1)"];
+0 [label="1"shape=diamond];
+0 -> 4544070480[color="green"];
+1 [label="0"shape=diamond];
+1 -> 4544070480[color="red"];
+4544070480 [label="0"shape=diamond];
+4544070480 -> 2[color="red"];
+}
+digraph G {
+2 [label="0"shape=diamond];
+4325057360 [label="AND-(5, 1)"];
+0 [label="1"shape=diamond];
+0 -> 4325057360[color="green"];
+1 [label="0"shape=diamond];
+1 -> 4325057360[color="red"];
+4325057360 -> 2[color="red"];
+}

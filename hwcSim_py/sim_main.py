@@ -1,4 +1,5 @@
 import sys
+import os
 
 from wiring.bit_dictionary import Bit_Dictionary
 
@@ -28,10 +29,14 @@ bit_dictionary = Bit_Dictionary()
 outputs = []
 inputs  = []
 
+connections = []
+graphGuide = {}
+graphKey = {}
 condConns = {}
 logic_ops = {}
 constants = {}
 memory    = {}
+bitValue  = {}
 
 def main():
 
@@ -155,6 +160,70 @@ def main():
                     for reader in readers:
                         reader(user_inputs.get(usr_input))
 
+                outputValue = bitValue.copy()
+                print("HERE ", outputValue)
+                logicalOpIds = []
+                # Before replacing logicops with id's to label as bits
+                labelDict = {}
+                # We delete all fromBits to identify output bit(s).
+                for graphComp in logic_ops.values():
+                    for currInput in graphComp.fromBits:
+                        graphGuide[currInput] = id(graphComp)
+                        del outputValue[currInput]
+                    # TO ADD SUPPORT FOR LOGICAL OPS CONNECTED TO LOGICAL OPS YOU MUST CHANGE THIS LINE.
+                    graphGuide[graphComp.toBit] = id(graphComp)
+                    logicalOpIds.append(id(graphComp))
+                
+                for graphConn in connections:
+                    labelDict[graphConn.fromBit] = {"to":graphConn.toBit, "val":bitValue[graphConn.fromBit]}
+                    if graphConn.toBit in graphGuide:
+                        graphKey[graphConn.fromBit] = {"to":graphGuide[graphConn.toBit], "val":bitValue[graphConn.fromBit]}
+                    else:
+                        if graphConn.fromBit in graphGuide:
+                            graphKey[graphGuide[graphConn.fromBit]] = {"to":graphConn.toBit, "val":bitValue[graphConn.fromBit]}
+                            # Adds the logical operator id to bitValue dict to define edge color later.
+                            bitValue[graphGuide[graphConn.fromBit]] = bitValue[graphConn.fromBit]
+                        else:
+                            graphKey[graphConn.fromBit] = {"to":graphConn.toBit, "val":bitValue[graphConn.fromBit]}
+                    del outputValue[graphConn.fromBit]
+
+                # Start writing file from dicts we just generated
+                try:
+                    os.remove(wire_filename[:len(wire_filename)-4] + ".svg")
+                except:
+                    pass
+
+                graphFile = open(wire_filename[:len(wire_filename)-4] + ".svg", "a")  # append mode
+                # graphFile = open("newGraph.txt", "a")  # append mode
+                graphFile.write("digraph G {\n")
+                print("Graph KEy:", graphKey)
+
+                for outputBit, outputVal in outputValue.items():
+                    graphFile.write(str(outputBit) + ' [label="' + str(outputVal) + "(" + str(outputBit) + " -> output )" + '"shape=diamond];\n')
+
+                for currLogicOp in logic_ops.values():
+                    graphFile.write(str(id(currLogicOp)) + ' [label="' + str(currLogicOp.fromBits) + ' -> ' + str(currLogicOp.toBit) + '"];\n')
+                
+
+                for fromNode, toNode in graphKey.items():
+                    color = "black"
+
+                    # Logical operators are declared before, so we should not redeclare any logicalops
+                    if fromNode not in logicalOpIds:
+                        graphFile.write(str(fromNode) + ' [label="' + str(bitValue[fromNode]) + "(" + str(fromNode) + " -> " + str(labelDict[fromNode]["to"]) + " )" + '"shape=diamond];\n')
+                    if bitValue[fromNode] == 1:
+                        color = "green"
+                    else:
+                        color = "red"
+                    del bitValue[fromNode]
+                            
+                    graphFile.write(str(fromNode) + " -> " + str(toNode["to"]) + '[color="'+ color +'"];\n')
+                graphFile.write("}\n")
+                graphFile.close()
+
+                print(str(graphKey))
+                print(str(bitValue))
+
         except IOError:
             print("ERROR: Unable to find or open " + input_filename + " or " + wire_filename)
             exit(1)
@@ -202,8 +271,8 @@ def main():
                     reader(user_inputs.get(user_in))
 
         else:
-            # TODO: Get input from user input
 
+            # TODO: Get input from user input
             for hwc_input in inputs:
                 
                 user_inputs[hwc_input] = int(input("Enter input for " + str(hwc_input) + ": "))
@@ -517,55 +586,55 @@ def parse_logic_ops(logic_count, file):
                     # Create AND Object for LogicOp
                     logic_obj = AND(bit_dictionary.get_readers(writer_key), 
                                 bit_dictionary.get_writers(writer_key), 
-                                "AND-" + str(writer_key))
+                                "AND-" + str(writer_key), [a[0],b[0]], out[0])
 
                 elif logic_info[1] == "OR":
                     # Create AND Object for LogicOp
                     logic_obj = OR(bit_dictionary.get_readers(writer_key), 
                                 bit_dictionary.get_writers(writer_key), 
-                                "OR-" + str(writer_key))
+                                "OR-" + str(writer_key), [a[0],b[0]], out[0])
 
                 elif logic_info[1] == "XOR":
                     # Create AND Object for LogicOp
                     logic_obj = XOR(bit_dictionary.get_readers(writer_key), 
                                 bit_dictionary.get_writers(writer_key), 
-                                "XOR-" + str(writer_key))
+                                "XOR-" + str(writer_key), [a[0],b[0]], out[0])
 
                 elif logic_info[1] == "EQ":
                     # Create EQ object for LogicOp
                     logic_obj = EQ(bit_dictionary.get_readers(writer_key), 
                                 bit_dictionary.get_writers(writer_key), 
-                                "EQ-" + str(writer_key))
+                                "EQ-" + str(writer_key), [a[0],b[0]], out[0])
 
                 elif logic_info[1] == "NEQ":
                     # Create NEQ object for LogicOp
                     logic_obj = NEQ(bit_dictionary.get_readers(writer_key), 
                                 bit_dictionary.get_writers(writer_key), 
-                                "NEQ-" + str(writer_key))
+                                "NEQ-" + str(writer_key), [a[0],b[0]], out[0])
 
                 elif logic_info[1] == "GT":
                     # Create EQ object for LogicOp
                     logic_obj = GT(bit_dictionary.get_readers(writer_key), 
                                 bit_dictionary.get_writers(writer_key), 
-                                "GT-" + str(writer_key))
+                                "GT-" + str(writer_key), [a[0],b[0]], out[0])
 
                 elif logic_info[1] == "GE":
                     # Create EQ object for LogicOp
                     logic_obj = GE(bit_dictionary.get_readers(writer_key), 
                                 bit_dictionary.get_writers(writer_key), 
-                                "GE-" + str(writer_key))
+                                "GE-" + str(writer_key), [a[0],b[0]], out[0])
 
                 elif logic_info[1] == "LT":
                     # Create EQ object for LogicOp
                     logic_obj = LT(bit_dictionary.get_readers(writer_key), 
                                 bit_dictionary.get_writers(writer_key), 
-                                "LT-" + str(writer_key))
+                                "LT-" + str(writer_key), [a[0],b[0]], out[0])
 
                 elif logic_info[1] == "LE":
                     # Create EQ object for LogicOp
                     logic_obj = LE(bit_dictionary.get_readers(writer_key), 
                                 bit_dictionary.get_writers(writer_key), 
-                                "LE-" + str(writer_key))
+                                "LE-" + str(writer_key), [a[0],b[0]], out[0])
 
                 else:
                     print("ERROR: Logic object not yet supported")
@@ -583,6 +652,9 @@ def parse_logic_ops(logic_count, file):
 
 def parse_connections(connCount, file):
     line = file.readline()
+
+    def wrapper(connection):
+        return lambda val: connection.deliver(val, bitValue)
 
     for conn in range(connCount):
         connInfo = line.split()
@@ -603,10 +675,11 @@ def parse_connections(connCount, file):
                 print("Short circuit detected @ " + line)
                 exit(1)
 
-            connection = connOp(bit_dictionary.get_readers(writer_key))
+            connection = connOp(bit_dictionary.get_readers(writer_key), toBit, fromBit)
+            connections.append(connection)
             # We create a connection object which stores the array where the readers are.
             # The deliver method calls all the readers in the array.
-            bit_dictionary.addReader(reader_key, lambda val: connection.deliver(val))
+            bit_dictionary.addReader(reader_key, wrapper(connection))
 
             line = file.readline()
         elif connInfo[0] == "cond":
@@ -628,7 +701,7 @@ def parse_connections(connCount, file):
 
             # Parse "from" side
             if reader_key not in condConns:
-                condConns[reader_key] = condConnOp()
+                condConns[reader_key] = condConnOp(toBit, fromBit, bitValue, connections)
             # Multiple conditional connections can go to the same place. One object can represent multiple conditional connections.
             # We distinguish these different connections going to the same location by the condition.
             condConns[reader_key].addConn(condition, bit_dictionary.get_readers(writer_key))

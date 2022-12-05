@@ -1,0 +1,9 @@
+digraph G {
+2 [label="(2 -> output )"shape=diamond];
+4513727440 [label="OR [3, 4] -> 5"];
+0 [label="(0 -> 3 )"shape=diamond];
+0 -> 4513727440[color="red"];
+1 [label="(1 -> 4 )"shape=diamond];
+1 -> 4513727440[color="red"];
+4513727440 -> 2[color="red"];
+}

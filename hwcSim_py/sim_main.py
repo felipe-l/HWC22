@@ -39,6 +39,8 @@ constants = {}
 memory    = {}
 bitValue  = {}
 
+#TODO Change logical operators to all have getName()
+
 def main():
 
     '''
@@ -224,9 +226,16 @@ def main():
                 print("Graph KEy:", graphKey)
 
                 for outputBit, outputVal in outputValue.items():
-                    graphFile.write(str(outputBit) + ' [label="(' + str(outputBit) + " -> output )" + '"shape=diamond];\n')
+                    tempColor = None
+                    if bitValue[outputBit] == 1:
+                        tempColor = "green"
+                    else:
+                        tempColor = "red"
+
+                    graphFile.write(str(outputBit) + ' [label="(' + str(outputBit) + " -> output )" + '"shape=diamond color=' + tempColor + '];\n')
 
                 for currLogicOp in logic_ops.values():
+
                     graphFile.write(str(id(currLogicOp)) + ' [label="' + currLogicOp.stringType() + " " + str(currLogicOp.fromBits) + ' -> ' + str(currLogicOp.toBit) + '"];\n')
                 
 
@@ -234,7 +243,13 @@ def main():
                     color = "black"
                     # Logical operators are declared before, so we should not redeclare any logicalops
                     if fromNode not in logicalOpIds:
-                        graphFile.write(str(fromNode) + ' [label="(' + str(fromNode) + " -> " + str(labelDict[fromNode]["to"]) + " )" + '"shape=diamond];\n')
+                        tempColor = None
+                        if bitValue[fromNode] == 1:
+                            tempColor = "green"
+                        else:
+                            tempColor = "red"
+
+                        graphFile.write(str(fromNode) + ' [label="(' + str(fromNode) + " -> " + str(labelDict[fromNode]["to"]) + " )" + '"shape=diamond color="' + tempColor + '"];\n')
                     if bitValue[fromNode] == 1:
                         color = "green"
                     else:
@@ -249,9 +264,10 @@ def main():
                             graphFile.write(str(fromNode) + " -> " + "joint"+str(fromNode) + '[headport=n arrowhead=none color="'+ color +'"];\n')
                             graphFile.write("joint"+str(fromNode) + " -> " + str(toNode["to"]) + '[color="'+ color +'"];\n')
                         else:
-                            graphFile.write("joint"+str(fromNode) + " -> " + str(toNode["to"]) + '[style=dotted color="'+ color +'"];\n')
+                            graphFile.write("joint"+str(fromNode) + " -> " + str(toNode["to"]) + '[style=dotted color="grey"];\n')
                             graphFile.write(str(fromNode) + " -> " + "joint"+str(fromNode) + '[style=dotted headport=n arrowhead=none color="'+ color +'"];\n')
 
+                        
                         conditionColor = "green"
                         if bitValue[toNode["condition"]] == 0:
                             conditionColor = "red"

@@ -161,6 +161,9 @@ class OR(LogicOp):
 
         for reader in self.readers:
             reader(self.out)
+        
+    def stringType(self):
+        return "OR"
 
     def get_lambda():
         return
@@ -492,7 +495,7 @@ class condConnOp(LogicOp):
         else:
             #Setting flag to true, to flag that output has been provided from this connection.
             self.producedOutput = True
-            bitValue[self.toBit] = condition[1]
+            bitValue[self.toBit] = condition
             # We create a connection object and immediately deliver.
             completeConn = connOp(self.condLambdas[condition][0], self.toBit, self.fromBit)
             # self.connections.append(completeConn)

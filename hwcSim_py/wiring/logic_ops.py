@@ -136,12 +136,14 @@ class OR(LogicOp):
         self.toBit = toBit
 
     def deliver_a(self, val):
+        print("DELIVERED A: FROM:" + str(self.fromBits) + " VAL:" + str(val))
         self.val_a = val
 
         # try to evaluate operation
         self.evaluate_op()
 
     def deliver_b(self, val):
+        print("DELIVERED B: FROM:" + str(self.fromBits) + " VAL:" + str(val))
         self.val_b = val
 
         # try to evaluate operation

@@ -168,10 +168,16 @@ def main():
 
 
                 ############################GRAPHVIZ##########################
+                labelVars = "abcdefghijklmnopqrstuvwxyz"
+                labelVarPtr = 0
+
                 print("START ", bitValue )
                 for condConn in condConns:
                     if condConns[condConn].fromBit not in bitValue:
                         bitValue[condConns[condConn].fromBit] = 0
+                    if condConns[condConn].toBit not in bitValue:
+                        bitValue[condConns[condConn].toBit] = -1
+                        
 
                 outputValue = bitValue.copy()
                 print("HERE ", outputValue)
@@ -187,6 +193,8 @@ def main():
                     graphGuide[graphComp.toBit] = id(graphComp)
                     logicalOpIds.append(id(graphComp))
                 
+                print("GRAPH GUIDE:" + str(graphGuide))
+
                 for graphConn in connections:
                     labelDict[graphConn.fromBit] = {"to":graphConn.toBit, "val":bitValue[graphConn.fromBit], "type": "connection"}
                     if graphConn.toBit in graphGuide:
@@ -199,9 +207,12 @@ def main():
                         else:
                             graphKey[graphConn.fromBit] = {"to":graphConn.toBit, "val":bitValue[graphConn.fromBit], "type": "connection"}
                     del outputValue[graphConn.fromBit]
+                print("GRAPH KEY: " + str(graphKey))
 
+                conditionsConn = []
                 for key, graphCondConn in condConns.items():
                     labelDict[graphCondConn.fromBit] = {"to":graphCondConn.toBit, "val":bitValue[graphCondConn.fromBit], "type": "cond", "condition": graphCondConn.conditionBit}
+                    conditionsConn.append(graphCondConn.conditionBit)
                     if graphCondConn.toBit in graphGuide:
                         graphKey[graphCondConn.fromBit] = {"to":graphGuide[graphCondConn.toBit], "val":bitValue[graphCondConn.fromBit], "type": "cond", "condition": graphCondConn.conditionBit}
                     else:
@@ -212,6 +223,7 @@ def main():
                         else:
                             graphKey[graphCondConn.fromBit] = {"to":graphCondConn.toBit, "val":bitValue[graphCondConn.fromBit], "type": "cond", "condition": graphCondConn.conditionBit}
                     del outputValue[graphCondConn.fromBit]
+
 
 
                 # Start writing file from dicts we just generated
@@ -226,37 +238,49 @@ def main():
                 print("Graph KEy:", graphKey)
 
                 for outputBit, outputVal in outputValue.items():
-                    tempColor = None
+                    tempColor = "grey"
                     if bitValue[outputBit] == 1:
                         tempColor = "green"
-                    else:
+                    elif bitValue[outputBit] == 0:
                         tempColor = "red"
 
-                    graphFile.write(str(outputBit) + ' [label="(' + str(outputBit) + " -> output )" + '"shape=diamond color=' + tempColor + '];\n')
+                    if outputBit in conditionsConn:
+                        graphFile.write(str(outputBit) + ' [shape=point color=' + tempColor + '];\n')
+                    else:
+                        graphFile.write(str(outputBit) + ' [label="out" shape=diamond color=' + tempColor + '];\n')
+
 
                 for currLogicOp in logic_ops.values():
-
-                    graphFile.write(str(id(currLogicOp)) + ' [label="' + currLogicOp.stringType() + " " + str(currLogicOp.fromBits) + ' -> ' + str(currLogicOp.toBit) + '"];\n')
+                    
+                    graphFile.write(str(id(currLogicOp)) + ' [label="' + currLogicOp.stringType() + '"];\n')
                 
 
                 for fromNode, toNode in graphKey.items():
-                    color = "black"
                     # Logical operators are declared before, so we should not redeclare any logicalops
-                    if fromNode not in logicalOpIds:
-                        tempColor = None
+                    if fromNode not in logicalOpIds and fromNode not in graphGuide:
+                        color = "grey"
                         if bitValue[fromNode] == 1:
-                            tempColor = "green"
-                        else:
-                            tempColor = "red"
+                            color = "green"
+                        elif bitValue[fromNode] == 0:
+                            color = "red"
+                        
+                        labelVar = labelVars[labelVarPtr]
+                        labelVarPtr+=1
 
-                        graphFile.write(str(fromNode) + ' [label="(' + str(fromNode) + " -> " + str(labelDict[fromNode]["to"]) + " )" + '"shape=diamond color="' + tempColor + '"];\n')
+                        graphFile.write(str(fromNode) + ' [label="' + labelVar + '" shape=diamond color="' + color + '"];\n')
+                    
+                    color = "grey"
                     if bitValue[fromNode] == 1:
                         color = "green"
-                    else:
+                    elif bitValue[fromNode] == 0:
                         color = "red"
                     del bitValue[fromNode]
                     if toNode["type"] == "connection":
-                        graphFile.write(str(fromNode) + " -> " + str(toNode["to"]) + '[color="'+ color +'"];\n')
+                        if fromNode in graphGuide:
+                            # This line is if logical operators ouptu to other logical operators.
+                            graphFile.write(str(graphGuide[fromNode]) + " -> " + str(toNode["to"]) + '[color="'+ color +'"];\n')
+                        else:
+                            graphFile.write(str(fromNode) + " -> " + str(toNode["to"]) + '[color="'+ color +'"];\n')
                     else:
                         graphFile.write("joint"+str(fromNode) + " [shape=point];\n")
                         #graphFile.write(str(fromNode) + " -> " + "joint"+str(fromNode) + '[headport=n arrowhead=none color="'+ color +'"];\n')
@@ -268,9 +292,11 @@ def main():
                             graphFile.write(str(fromNode) + " -> " + "joint"+str(fromNode) + '[style=dotted headport=n arrowhead=none color="'+ color +'"];\n')
 
                         
-                        conditionColor = "green"
+                        conditionColor = "grey"
                         if bitValue[toNode["condition"]] == 0:
                             conditionColor = "red"
+                        elif bitValue[toNode["condition"]] == 1:
+                            conditionColor = "green"
                         graphFile.write(str(toNode["condition"]) + " -> " + "joint"+str(fromNode) + '[headport=e color="'+ conditionColor +'"];\n')
                 graphFile.write("}\n")
                 graphFile.close()
@@ -582,6 +608,12 @@ def parse_memory(mem_count, file):
 def parse_logic_ops(logic_count, file):
     line = file.readline()
 
+    def wrapperDeliverA(logic_obj):
+        return lambda val: logic_obj.deliver_a(val)
+
+    def wrapperDeliverB(logic_obj):
+        return lambda val: logic_obj.deliver_b(val)
+
     for logic in range(logic_count):
         logic_info = line.split()
         
@@ -695,8 +727,8 @@ def parse_logic_ops(logic_count, file):
                     exit(1)
 
                 # Parse from side
-                bit_dictionary.addReader(reader_a_key, lambda val: logic_obj.deliver_a(val))
-                bit_dictionary.addReader(reader_b_key, lambda val: logic_obj.deliver_b(val))
+                bit_dictionary.addReader(reader_a_key, wrapperDeliverA(logic_obj))
+                bit_dictionary.addReader(reader_b_key, wrapperDeliverB(logic_obj))
 
                 logic_ops[logic_obj.getName()] = logic_obj
 

@@ -1,9 +1,9 @@
 digraph G {
-2 [label="0"shape=diamond];
-4353160016 [label="AND-(5, 1)"];
-0 [label="1"shape=diamond];
-0 -> 4353160016[color="green"];
-1 [label="0"shape=diamond];
-1 -> 4353160016[color="red"];
-4353160016 -> 2[color="red"];
+2 [label="out" shape=diamond color=red];
+140339005383776 [label="AND"];
+0 [label="a" shape=diamond color="green"];
+0 -> 140339005383776[color="green"];
+1 [label="b" shape=diamond color="red"];
+1 -> 140339005383776[color="red"];
+140339005383776 -> 2[color="red"];
 }

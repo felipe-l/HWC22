@@ -1,0 +1,17 @@
+digraph G {
+8 [label="out" shape=diamond color=green];
+4434760784 [label="OR"];
+4434761168 [label="OR"];
+4434760976 [label="OR"];
+0 [label="a" shape=diamond color="red"];
+0 -> 4434760784[color="red"];
+1 [label="b" shape=diamond color="red"];
+1 -> 4434760784[color="red"];
+2 [label="c" shape=diamond color="red"];
+2 -> 4434760976[color="red"];
+3 [label="d" shape=diamond color="green"];
+3 -> 4434760976[color="green"];
+4434760784 -> 4434761168[color="red"];
+4434760976 -> 4434761168[color="green"];
+4434761168 -> 8[color="green"];
+}

@@ -227,12 +227,17 @@ def main():
 
 
                 # Start writing file from dicts we just generated
+                newFileName = ""
+                if "/" in wire_filename:
+                    newFileName = wire_filename.split("/")[-1][:len(wire_filename.split("/")[-1])-5] + ".svg"
+                else:
+                    newFileName = wire_filename[:len(wire_filename)-5] + ".svg"
                 try:
-                    os.remove(wire_filename[:len(wire_filename)-4] + ".svg")
+                    os.remove(newFileName)
                 except:
                     pass
 
-                graphFile = open(wire_filename[:len(wire_filename)-4] + ".svg", "a")  # append mode
+                graphFile = open(newFileName, "a")  # append mode
                 # graphFile = open("newGraph.txt", "a")  # append mode
                 graphFile.write("digraph G {\n")
                 print("Graph KEy:", graphKey)
@@ -570,7 +575,8 @@ def parse_wire_file():
         print("\n############################################################################\n")
 
 
-    except IOError:
+    except IOError as err:
+        print(err)
         print("ERROR: Unable to find or open " + wire_filename)
         exit(1)
 

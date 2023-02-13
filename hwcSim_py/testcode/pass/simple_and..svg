@@ -1,9 +1,0 @@
-digraph G {
-2 [label="out" shape=diamond color=red];
-140339005383776 [label="AND"];
-0 [label="a" shape=diamond color="green"];
-0 -> 140339005383776[color="green"];
-1 [label="b" shape=diamond color="red"];
-1 -> 140339005383776[color="red"];
-140339005383776 -> 2[color="red"];
-}

@@ -1,0 +1,9 @@
+digraph G {
+2 [label="1(2)"shape=diamond];
+4400394960 [label="EQ-(5, 1)"];
+0 [label="0(0)"shape=diamond];
+0 -> 4400394960[color="red"];
+1 [label="0(1)"shape=diamond];
+1 -> 4400394960[color="red"];
+4400394960 -> 2[color="green"];
+}

@@ -17,6 +17,8 @@ case OP_NEQUAL:
 		case OP_CONCAT:
 '''
 
+from wiring.bit_dictionary import Bit_Dictionary
+
 class LogicOp(object):
 
     def __init__(self, readers, writers, name):
@@ -80,12 +82,14 @@ class NOT(LogicOp):
 
 class AND(LogicOp):
 
-    def __init__(self, readers, writers, name):
+    def __init__(self, readers, writers, name, fromBits, toBit):
         LogicOp.__init__(self, readers, writers, name)
 
         self.val_a = None
         self.val_b = None
         self.out   = None
+        self.fromBits = fromBits
+        self.toBit = toBit
 
     def deliver_a(self, val):
         self.val_a = val
@@ -114,25 +118,32 @@ class AND(LogicOp):
         for reader in self.readers:
             reader(self.out)
 
+    def stringType(self):
+        return "AND"
+
     def get_lambda():
         return
 
 class OR(LogicOp):
 
-    def __init__(self, readers, writers, name):
+    def __init__(self, readers, writers, name, fromBits, toBit):
         LogicOp.__init__(self, readers, writers, name)
 
         self.val_a = None
         self.val_b = None
         self.out   = None
+        self.fromBits = fromBits
+        self.toBit = toBit
 
     def deliver_a(self, val):
+        print("DELIVERED A: FROM:" + str(self.fromBits) + " VAL:" + str(val))
         self.val_a = val
 
         # try to evaluate operation
         self.evaluate_op()
 
     def deliver_b(self, val):
+        print("DELIVERED B: FROM:" + str(self.fromBits) + " VAL:" + str(val))
         self.val_b = val
 
         # try to evaluate operation
@@ -152,18 +163,23 @@ class OR(LogicOp):
 
         for reader in self.readers:
             reader(self.out)
+        
+    def stringType(self):
+        return "OR"
 
     def get_lambda():
         return
 
 class XOR(LogicOp):
 
-    def __init__(self, readers, writers, name):
+    def __init__(self, readers, writers, name, fromBits, toBit):
         LogicOp.__init__(self, readers, writers, name)
 
         self.val_a = None
         self.val_b = None
         self.out   = None
+        self.fromBits = fromBits
+        self.toBit = toBit
 
     def deliver_a(self, val):
         self.val_a = val
@@ -198,12 +214,14 @@ class XOR(LogicOp):
 
 class EQ(LogicOp):
 
-    def __init__(self, readers, writers, name):
+    def __init__(self, readers, writers, name, fromBits, toBit):
         LogicOp.__init__(self, readers, writers, name)
         
         self.val_a = None
         self.val_b = None
         self.out   = None
+        self.fromBits = fromBits
+        self.toBit = toBit
 
     def deliver_a(self, val):
         self.val_a = val
@@ -237,12 +255,14 @@ class EQ(LogicOp):
 
 class NEQ(LogicOp):
 
-    def __init__(self, readers, writers, name):
+    def __init__(self, readers, writers, name, fromBits, toBit):
         LogicOp.__init__(self, readers, writers, name)
         
         self.val_a = None
         self.val_b = None
         self.out   = None
+        self.fromBits = fromBits
+        self.toBit = toBit
 
     def deliver_a(self, val):
         self.val_a = val
@@ -276,12 +296,14 @@ class NEQ(LogicOp):
 
 class GT(LogicOp):
 
-    def __init__(self, readers, writers, name):
+    def __init__(self, readers, writers, name, fromBits, toBit):
         LogicOp.__init__(self, readers, writers, name)
         
         self.val_a = None
         self.val_b = None
         self.out   = None
+        self.fromBits = fromBits
+        self.toBit = toBit
 
     def deliver_a(self, val):
         self.val_a = val
@@ -313,12 +335,14 @@ class GT(LogicOp):
 
 class GE(LogicOp):
 
-    def __init__(self, readers, writers, name):
+    def __init__(self, readers, writers, name, fromBits, toBit):
         LogicOp.__init__(self, readers, writers, name)
         
         self.val_a = None
         self.val_b = None
         self.out   = None
+        self.fromBits = fromBits
+        self.toBit = toBit
 
     def deliver_a(self, val):
         self.val_a = val
@@ -350,12 +374,14 @@ class GE(LogicOp):
 
 class LT(LogicOp):
 
-    def __init__(self, readers, writers, name):
+    def __init__(self, readers, writers, name, fromBits, toBit):
         LogicOp.__init__(self, readers, writers, name)
         
         self.val_a = None
         self.val_b = None
         self.out   = None
+        self.fromBits = fromBits
+        self.toBit = toBit
 
     def deliver_a(self, val):
         self.val_a = val
@@ -387,12 +413,14 @@ class LT(LogicOp):
 
 class LE(LogicOp):
 
-    def __init__(self, readers, writers, name):
+    def __init__(self, readers, writers, name, fromBits, toBit):
         LogicOp.__init__(self, readers, writers, name)
         
         self.val_a = None
         self.val_b = None
         self.out   = None
+        self.fromBits = fromBits
+        self.toBit = toBit
 
     def deliver_a(self, val):
         self.val_a = val
@@ -443,6 +471,75 @@ class assertOp(LogicOp):
             print("ASSERT FAILED AT BIT " + str(self.BIT))
             assert False
 
+    def get_lambda():
+        return
+
+class condConnOp(LogicOp):
+
+    def __init__(self, toBit, fromBit, bitValue, connections):
+
+        self.producedOutput = False
+        self.condLambdas = {}
+        self.toBit = toBit
+        self.fromBit = fromBit
+        self.bitValue = bitValue
+        self.conditionBit = None
+        self.connections = connections
+        self.madeConnection = None
+
+    def evaluate_op(self, condition, bitValue):
+        if self.condLambdas[condition][1] == False or self.condLambdas[condition][2] == False:
+            return
+
+        if self.producedOutput:
+            print("Conditional connection has made a short circuit.")
+            assert False
+        else:
+            #Setting flag to true, to flag that output has been provided from this connection.
+            self.producedOutput = True
+            bitValue[self.toBit] = condition
+            # We create a connection object and immediately deliver.
+            completeConn = connOp(self.condLambdas[condition][0], self.toBit, self.fromBit)
+            # self.connections.append(completeConn)
+            self.madeConnection = completeConn
+            completeConn.deliver(self.condLambdas[condition][1], self.bitValue)
+    
+    # Three items in the list. First item is lambda to be called, second is val, third is if condition was met.
+    # Create a conditional connection to the same location, we use the condition as a identifier.
+    def addConn(self, condition, readers):
+        self.conditionBit = condition
+        self.condLambdas[condition] =  [readers, False, False]
+
+    # Deliver value bit
+    def setVal(self, condition, val, bitValue):
+        self.condLambdas[condition][1] = val
+        bitValue[self.fromBit] = val
+        self.evaluate_op(condition, bitValue)
+    
+    # Deliver condition bit
+    def setCondition(self, condition, val, bitValue):
+        self.condLambdas[condition][2] = val
+        self.evaluate_op(condition, bitValue)
+
+    def get_lambda():
+        return
+
+class connOp(LogicOp):
+
+    def __init__(self, readers, toBit, fromBit):
+        
+        # Reference of readers from bit dictionary.
+        self.readers = readers
+        self.toBit = toBit
+        self.fromBit = fromBit
+        self.condLambdas = {}
+
+    def deliver(self, val, bitValue):
+        bitValue[self.toBit] = val
+        bitValue[self.fromBit] = val
+        # Run all the readers from the reference obtained on compile time from bit dictionary.
+        for reader in self.readers:
+            reader(val)
 
     def get_lambda():
         return

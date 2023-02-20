@@ -1,0 +1,15 @@
+digraph G {
+2 [shape=point color=red];
+7 [label="out" shape=diamond color=grey];
+139976315229472 [label="AND"];
+0 [label="a" shape=diamond color="red"];
+0 -> 139976315229472[color="red"];
+1 [label="b" shape=diamond color="green"];
+1 -> 139976315229472[color="green"];
+139976315229472 -> 2[color="red"];
+6 [label="c" shape=diamond color="green"];
+joint6 [shape=point];
+joint6 -> 7[style=dotted color="grey"];
+6 -> joint6[style=dotted headport=n arrowhead=none color="green"];
+2 -> joint6[headport=e color="red"];
+}

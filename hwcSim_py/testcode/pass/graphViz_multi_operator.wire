@@ -1,0 +1,32 @@
+# HWC Wiring Diagram
+version: 1.0
+
+debug=""
+
+bits 14
+
+memory count 0
+
+logic count 3
+  logic OR size 1 a 4 b 5 out 9
+  logic OR size 1 a 6 b 7 out 10
+  logic OR size 1 a 11 b 12 out 13
+
+connection count 7
+  connection               size 1 to 4 from 0
+  connection               size 1 to 5 from 1
+  connection               size 1 to 6 from 2
+  connection               size 1 to 7 from 3
+  connection               size 1 to 11 from 9
+  connection               size 1 to 12 from 10
+  connection               size 1 to 8 from 13
+
+assert count 0
+
+i/o count 5
+  input size 1 in 0
+  input size 1 in 1
+  input size 1 in 2
+  input size 1 in 3
+  output size 1 out 8
+  

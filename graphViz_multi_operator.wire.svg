@@ -1,0 +1,17 @@
+digraph G {
+8 [label="out" shape=diamond color=green];
+139832465436880 [label="OR"];
+139832465435728 [label="OR"];
+139832465435200 [label="OR"];
+0 [label="a" shape=diamond color="red"];
+0 -> 139832465436880[color="red"];
+1 [label="b" shape=diamond color="red"];
+1 -> 139832465436880[color="red"];
+2 [label="c" shape=diamond color="red"];
+2 -> 139832465435728[color="red"];
+3 [label="d" shape=diamond color="green"];
+3 -> 139832465435728[color="green"];
+139832465436880 -> 139832465435200[color="red"];
+139832465435728 -> 139832465435200[color="green"];
+139832465435200 -> 8[color="green"];
+}
